@@ -1,0 +1,107 @@
+Organizations:
+
+    - &OrdererOrg
+      Name: OrdererOrg
+      ID: OrdererOrg
+      MSPDir: crypto-config/ordererOrganizations/evote.com/msp
+
+    - &ElectionCommitteeOrg
+        Name: ElectionCommitteeOrg
+        ID: ElectionCommitteeOrg
+        MSPDir: crypto-config/peerOrganizations/electioncommittee.evote.com/msp
+        AnchorPeers:
+            - Host: peer0.electioncommittee.evote.com
+              Port: 7051
+
+    - &ExecutiveOrg
+        Name: ExecutiveOrg
+        ID: ExecutiveOrg
+        MSPDir: crypto-config/peerOrganizations/executive.evote.com/msp
+        AnchorPeers:
+            - Host: peer0.executive.evote.com
+              Port: 7051  
+
+    - &OccupantsOrg
+        Name: OccupantsOrg
+        ID: OccupantsOrg
+        MSPDir: crypto-config/peerOrganizations/occupants.evote.com/msp
+        AnchorPeers:
+            - Host: peer0.occupants.evote.com
+              Port: 7051
+
+    - &BuildingRepresentativesOrg
+        Name: BuildingRepresentativesOrg
+        ID: BuildingRepresentativesOrg
+        MSPDir: crypto-config/peerOrganizations/buildingrepresentatives.evote.com/msp
+        AnchorPeers:
+            - Host: peer0.buildingrepresentatives.evote.com
+              Port: 7051
+
+    - &ManagementOfficeOrg
+        Name: ManagementOfficeOrg
+        ID: ManagementOfficeOrg
+        MSPDir: crypto-config/peerOrganizations/managementoffice.evote.com/msp
+        AnchorPeers:
+            - Host: peer0.managementoffice.evote.com
+              Port: 7051
+
+Orderer: &OrdererDefaults
+
+    OrdererType: kafka
+    Addresses:
+        orderer.evote.com:7050
+    BatchTimeout: 2s
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+    Kafka:
+        Brokers:
+            - kafka1.evote.com:9092
+            - kafka2.evote.com:9092
+            - kafka3.evote.com:9092
+            - kafka4.evote.com:9092
+    Organizations:
+
+
+Application: &ApplicationDefaults
+    Organizations:
+
+Profiles:
+    OrdererGenesis:
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+
+        Consortiums:
+           SampleConsortium:
+              Organizations:
+                - *ElectionCommitteeOrg
+                - *ExecutiveOrg
+                - *OccupantsOrg
+                - *BuildingRepresentativesOrg
+                - *ManagementOfficeOrg
+
+    Channel1:
+        Consortium: SampleConsortium
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *ElectionCommitteeOrg
+    Channel2:
+        Consortium: SampleConsortium
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *ExecutiveOrg            
+    Channel3:
+        Consortium: SampleConsortium
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+              - *ElectionCommitteeOrg
+              - *ExecutiveOrg
+              - *OccupantsOrg
+              - *BuildingRepresentativesOrg
+              - *ManagementOfficeOrg

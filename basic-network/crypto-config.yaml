@@ -1,0 +1,42 @@
+OrdererOrgs:
+  - Name: Orderer
+    Domain: evote.com
+    Specs:
+      - Hostname: orderer1
+      - Hostname: orderer2
+
+PeerOrgs:
+  - Name: ElectionCommittee
+    Domain: electioncommittee.evote.com
+    Template:
+    Count: 2
+    Users:
+    Count: 1
+
+  - Name: Executive
+    Domain: executive.evote.com
+    Template:
+    Count: 2
+    Users:
+    Count: 1
+
+  - Name: Occupants
+    Domain: occupants.evote.com
+    Template:
+    Count: 2
+    Users:
+    Count: 1
+
+  - Name: BuildingRepresentatives
+    Domain: buildingrepresentatives.evote.com
+    Template:
+    Count: 2
+    Users:
+    Count: 1
+
+  - Name: ManagementOffice
+    Domain: managementoffice.evote.com
+    Template:
+    Count: 2
+    Users:
+    Count: 1

@@ -1,0 +1,693 @@
+version: '2'
+
+networks: 
+  evote: 
+
+
+services: 
+    orderer1.evote.com: 
+        container_name: orderer.evote.com
+        image: hyperledger/fabric-orderer:1.4.3
+        environment: 
+            - ORDERER_GENERAL_LOGLEVEL=debug
+            - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+            - ORDERER_GENERAL_GENESISMETHOD=file
+            - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/comfigtx/genesis.block
+            - ORDERER_GENERAL_LOCALMSPID=OrdererOrg
+            - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/msp/orderer/msp
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
+        command: orderer
+        ports: 
+            - 7050:7050
+        volumes:  
+            - ./config/:/etc/hyperledger/configtx
+            - ./crypto-config/ordererOrganizations/evote.com/orderers/orderer.evote.com/:/etc/hyperledger/msp/orderer
+        depends_on:
+            - kafka1.evote.com
+            - kafka2.evote.com
+            - kafka3.evote.com
+            - kafka4.evote.com
+        networks: 
+            - evote
+
+    orderer2.evote.com:
+        container_name: orderer2.evote.com
+        image: hyperledger/fabric-orderer:1.4.3
+        environment:
+            - ORDERER_GENERAL_LOGLEVEL=debug
+            - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+            - ORDERER_GENERAL_GENESISMETHOD=file
+            - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/genesis.block
+            - ORDERER_GENERAL_LOCALMSPID=OrdererOrg
+            - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/msp/orderer/msp
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
+        command: orderer
+        ports:
+            - 8050:7050
+        volumes:
+            - ./config/:/etc/hyperledger/configtx
+            - ./crypto-config/ordererOrganizations/acornpub.com/orderers/orderer2.acornpub.com/:/etc/hyperledger/msp/orderer
+        depends_on:
+            - kafka1.evote.com
+            - kafka2.evote.com
+            - kafka3.evote.com
+            - kafka4.evote.com
+        networks:
+            - evote
+
+    kafka1.evote.com:
+        container_name: kafka1.evote.com
+        extends:
+            file: ./base/kafka-base.yaml
+            service: kafka
+        environment:
+            - KAFKA_BROKER_ID=1
+        ports:
+            - 9092:9092
+            - 9093:9093
+        depends_on:
+            - zookeeper1.evote.com
+            - zookeeper2.evote.com
+            - zookeeper3.evote.com
+        networks:
+            - evote
+
+    kafka2.evote.com:
+        container_name: kafka2.evote.com
+        extends:
+            file: ./base/kafka-base.yaml
+            service: kafka
+        environment:
+            - KAFKA_BROKER_ID=2
+        ports:
+            - 10092:9092
+            - 10093:9093
+        depends_on:
+            - zookeeper1.evote.com
+            - zookeeper2.evote.com
+            - zookeeper3.evote.com
+        networks:
+            - evote
+    kafka3.evote.com:
+        container_name: kafka3.evote.com
+        extends:
+            file: ./base/kafka-base.yaml
+            service: kafka
+        environment:
+            - KAFKA_BROKER_ID=3
+        ports:
+            - 11092:9092
+            - 11093:9093
+        depends_on:
+            - zookeeper1.evote.com
+            - zookeeper2.evote.com
+            - zookeeper3.evote.com
+        networks:
+            - evote
+
+    kafka4.evote.com:
+        container_name: kafka4.evote.com
+        extends:
+            file: ./base/kafka-base.yaml
+            service: kafka
+        environment:
+            - KAFKA_BROKER_ID=4
+        ports:
+            - 12092:9092
+            - 12093:9093
+        depends_on:
+            - zookeeper1.evote.com
+            - zookeeper2.evote.com
+            - zookeeper3.evote.com
+        networks:
+            - evote
+
+    zookeeper1.evote.com:
+        container_name: zookeeper1.evote.com
+        extends:
+            file: ./base/kafka-base.yaml
+            service: zookeeper
+        environment:
+            - ZOO_MY_ID=1
+        ports:
+            - 2181:2181
+            - 2888:2888
+            - 3888:3888
+        networks:
+            - evote
+
+    zookeeper2.evote.com:
+        container_name: zookeeper2.evote.com
+        extends:
+            file: ./base/kafka-base.yaml
+            service: zookeeper
+        environment:
+            - ZOO_MY_ID=2
+        ports:
+            - 12181:2181
+            - 12888:2888
+            - 13888:3888
+        networks:
+            - evote
+
+    zookeeper3.evote.com:
+        container_name: zookeeper3.evote.com
+        extends:
+            file: ./base/kafka-base.yaml
+            service: zookeeper
+        environment:
+            - ZOO_MY_ID=3
+        ports:
+            - 22181:2181
+            - 22888:2888
+            - 25888:3888
+        networks:
+            - evote
+            
+    peer0.electioncommittee.evote.com: 
+        container_name: peer0.electioncommittee.evote.com
+        image: hyperledger/fabric-peer:1.4.3
+        environment: 
+            - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+            - CORE_PEER_ID=peer0.electioncommittee.evote.com
+            - CORE_LOGGING_PEER=debug
+            - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+            - CORE_PEER_LOCALMSPID=ElectionCommitteeOrg
+            - CORE_PEER_MSPCONFIGPATH= /etc/hyperledger/msp/peer
+            - CORE_PEER_ADDRESS=peer0.electioncommittee.evote.com:7051
+            - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.electioncommittee.evote.com:7051
+            - CORE_PEER_GOSSIP_ENDPOINT=peer0.electioncommittee.evote.com:7051
+            - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.electioncommittee.evote.com:7051
+            - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=net_evote
+            - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1:5984
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+        command: peer node start
+        ports: 
+            - 7051:7051
+            - 7053:7053
+        volumes: 
+            - /var/run/:/host/var/run/
+            - ./crypto-config/peerOrganizations/electioncommittee.evote.com/peers/peer0.electioncommittee.evote.com/msp:/etc/hyperledger/msp/peer
+            - ./crypto-config/peerOrganizations/electioncommittee.evote.com/users:/etc/hyperledger/msp/users
+            - ./config:/etc/hyperledger/configtx
+        depends_on: 
+          - orderer1.evote.com
+          - orderer2.evote.com
+          - couchdb1
+        networks: 
+          - evote
+    
+    couchdb1:
+        container_name: couchdb1
+        image: hyperledger/fabric-couchdb
+        environment:
+            - COUCHDB_USER=
+            - COUCHDB_PASSWORD=
+        ports:
+            - 5984:5984
+        networks:
+            - evote
+
+    peer1.electioncommittee.evote.com: 
+        container_name: peer1.electioncommittee.evote.com
+        image: hyperledger/fabric-peer:1.4.3
+        environment: 
+            - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+            - CORE_PEER_ID=peer1.electioncommittee.evote.com
+            - CORE_LOGGING_PEER=debug
+            - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+            - CORE_PEER_LOCALMSPID=ElectionCommitteeOrg
+            - CORE_PEER_MSPCONFIGPATH= /etc/hyperledger/msp/peer
+            - CORE_PEER_ADDRESS=peer1.electioncommittee.evote.com:7051
+            - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=net_evote
+            - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb2:5984
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+        command: peer node start
+        ports: 
+            - 8051:7051
+            - 8053:7053
+        volumes: 
+            - /var/run/:/host/var/run/
+            - ./crypto-config/peerOrganizations/electioncommittee.evote.com/peers/peer1.electioncommittee.evote.com/msp:/etc/hyperledger/msp/peer
+            - ./crypto-config/peerOrganizations/electioncommittee.evote.com/users:/etc/hyperledger/msp/users
+            - ./config:/etc/hyperledger/configtx
+        depends_on: 
+          - orderer1.evote.com
+          - orderer2.evote.com
+          - couchdb2
+        networks: 
+          - evote
+    
+    couchdb2:
+        container_name: couchdb2
+        image: hyperledger/fabric-couchdb
+        environment:
+            - COUCHDB_USER=
+            - COUCHDB_PASSWORD=
+        ports:
+            - 6984:5984
+        networks:
+            - evote
+
+    peer0.executive.evote.com: 
+        container_name: peer0.executive.evote.com
+        image: hyperledger/fabric-peer:1.4.3
+        environment: 
+            - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+            - CORE_PEER_ID=peer0.executive.evote.com
+            - CORE_LOGGING_PEER=debug
+            - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+            - CORE_PEER_LOCALMSPID=ExecutiveOrg
+            - CORE_PEER_MSPCONFIGPATH= /etc/hyperledger/msp/peer
+            - CORE_PEER_ADDRESS=peer0.executive.evote.com:7051
+            - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.executive.evote.com:7051
+            - CORE_PEER_GOSSIP_ENDPOINT=peer0.executive.evote.com:7051
+            - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.executive.evote.com:7051
+            - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=net_evote
+            - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb3:5984
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+        command: peer node start
+        ports: 
+            - 9051:7051
+            - 9053:7053
+        volumes: 
+            - /var/run/:/host/var/run/
+            - ./crypto-config/peerOrganizations/executive.evote.com/peers/peer0.executive.evote.com/msp:/etc/hyperledger/msp/peer
+            - ./crypto-config/peerOrganizations/executive.evote.com/users:/etc/hyperledger/msp/users
+            - ./config:/etc/hyperledger/configtx
+        depends_on: 
+          - orderer1.evote.com
+          - orderer2.evote.com
+          - couchdb3
+        networks: 
+          - evote
+
+    couchdb3:
+        container_name: couchdb3
+        image: hyperledger/fabric-couchdb
+        environment:
+            - COUCHDB_USER=
+            - COUCHDB_PASSWORD=
+        ports:
+            - 7984:5984
+        networks:
+            - evote
+
+    peer1.executive.evote.com: 
+        container_name: peer1.executive.evote.com
+        image: hyperledger/fabric-peer:1.4.3
+        environment: 
+            - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+            - CORE_PEER_ID=peer1.executive.evote.com
+            - CORE_LOGGING_PEER=debug
+            - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+            - CORE_PEER_LOCALMSPID=ExecutiveOrg
+            - CORE_PEER_MSPCONFIGPATH= /etc/hyperledger/msp/peer
+            - CORE_PEER_ADDRESS=peer1.executive.evote.com:7051
+            - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=net_evote
+            - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb4:5984
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+        command: peer node start
+        ports: 
+            - 10051:7051
+            - 10053:7053
+        volumes: 
+            - /var/run/:/host/var/run/
+            - ./crypto-config/peerOrganizations/executive.evote.com/peers/peer1.executive.evote.com/msp:/etc/hyperledger/msp/peer
+            - ./crypto-config/peerOrganizations/executive.evote.com/users:/etc/hyperledger/msp/users
+            - ./config:/etc/hyperledger/configtx
+        depends_on: 
+          - orderer1.evote.com
+          - orderer2.evote.com
+          - couchdb4
+        networks: 
+          - evote
+    
+    couchdb4:
+        container_name: couchdb4
+        image: hyperledger/fabric-couchdb
+        environment:
+            - COUCHDB_USER=
+            - COUCHDB_PASSWORD=
+        ports:
+            - 8984:5984
+        networks:
+            - evote
+
+    peer0.occupants.evote.com: 
+        container_name: peer0.occupants.evote.com
+        image: hyperledger/fabric-peer:1.4.3
+        environment: 
+            - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+            - CORE_PEER_ID=peer0.occupants.evote.com
+            - CORE_LOGGING_PEER=debug
+            - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+            - CORE_PEER_LOCALMSPID=OccupantsOrg
+            - CORE_PEER_MSPCONFIGPATH= /etc/hyperledger/msp/peer
+            - CORE_PEER_ADDRESS=peer0.occupants.evote.com:7051
+            - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.executive.evote.com:7051
+            - CORE_PEER_GOSSIP_ENDPOINT=peer0.executive.evote.com:7051
+            - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.executive.evote.com:7051
+            - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=net_evote
+            - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb5:5984
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+        command: peer node start
+        ports: 
+            - 11051:7051
+            - 11053:7053
+        volumes: 
+            - /var/run/:/host/var/run/
+            - ./crypto-config/peerOrganizations/occupants.evote.com/peers/peer0.occupants.evote.com/msp:/etc/hyperledger/msp/peer
+            - ./crypto-config/peerOrganizations/occupants.evote.com/users:/etc/hyperledger/msp/users
+            - ./config:/etc/hyperledger/configtx
+        depends_on: 
+          - orderer1.evote.com
+          - orderer2.evote.com
+          - couchdb5
+        networks: 
+          - evote
+
+    couchdb5:
+        container_name: couchdb5
+        image: hyperledger/fabric-couchdb
+        environment:
+            - COUCHDB_USER=
+            - COUCHDB_PASSWORD=
+        ports:
+            - 9984:5984
+        networks:
+            - evote
+
+    peer1.occupants.evote.com: 
+        container_name: peer1.occupants.evote.com
+        image: hyperledger/fabric-peer:1.4.3
+        environment: 
+            - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+            - CORE_PEER_ID=peer1.occupants.evote.com
+            - CORE_LOGGING_PEER=debug
+            - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+            - CORE_PEER_LOCALMSPID=OccupantsOrg
+            - CORE_PEER_MSPCONFIGPATH= /etc/hyperledger/msp/peer
+            - CORE_PEER_ADDRESS=peer1.occupants.evote.com:7051
+            - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=net_evote
+            - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb6:5984
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+        command: peer node start
+        ports: 
+            - 12051:7051
+            - 12053:7053
+        volumes: 
+            - /var/run/:/host/var/run/
+            - ./crypto-config/peerOrganizations/occupants.evote.com/peers/peer1.occupants.evote.com/msp:/etc/hyperledger/msp/peer
+            - ./crypto-config/peerOrganizations/occupants.evote.com/users:/etc/hyperledger/msp/users
+            - ./config:/etc/hyperledger/configtx
+        depends_on: 
+          - orderer1.evote.com
+          - orderer2.evote.com
+          - couchdb6
+        networks: 
+          - evote
+
+    couchdb6:
+        container_name: couchdb6
+        image: hyperledger/fabric-couchdb
+        environment:
+            - COUCHDB_USER=
+            - COUCHDB_PASSWORD=
+        ports:
+            - 10984:5984
+        networks:
+            - evote
+
+    peer0.buildingrepresentatives.evote.com: 
+        container_name: peer0.buildingrepresentatives.evote.com
+        image: hyperledger/fabric-peer:1.4.3
+        environment: 
+            - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+            - CORE_PEER_ID=peer0.buildingrepresentatives.evote.com
+            - CORE_LOGGING_PEER=debug
+            - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+            - CORE_PEER_LOCALMSPID=BuildingRepresentativesOrg
+            - CORE_PEER_MSPCONFIGPATH= /etc/hyperledger/msp/peer
+            - CORE_PEER_ADDRESS=peer0.buildingrepresentatives.evote.com:7051
+            - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.buildingrepresentatives.evote.com:7051
+            - CORE_PEER_GOSSIP_ENDPOINT=peer0.buildingrepresentatives.evote.com:7051
+            - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.buildingrepresentatives.evote.com:7051
+            - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=net_evote
+            - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb7:5984
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+        command: peer node start
+        ports: 
+            - 13051:7051
+            - 13053:7053
+
+        volumes: 
+            - /var/run/:/host/var/run/
+            - ./crypto-config/peerOrganizations/buildingrepresentatives.evote.com/peers/peer0.buildingrepresentatives.evote.com/msp:/etc/hyperledger/msp/peer
+            - ./crypto-config/peerOrganizations/buildingrepresentatives.evote.com/users:/etc/hyperledger/msp/users
+            - ./config:/etc/hyperledger/configtx
+        depends_on: 
+          - orderer1.evote.com
+          - orderer2.evote.com
+          - couchdb7
+        networks: 
+          - evote
+
+    couchdb7:
+        container_name: couchdb7
+        image: hyperledger/fabric-couchdb
+        environment:
+            - COUCHDB_USER=
+            - COUCHDB_PASSWORD=
+        ports:
+            - 11984:5984
+        networks:
+            - evote
+
+    peer1.buildingrepresentatives.evote.com: 
+        container_name: peer1.buildingrepresentatives.evote.com
+        image: hyperledger/fabric-peer:1.4.3
+        environment: 
+            - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+            - CORE_PEER_ID=peer1.buildingrepresentatives.evote.com
+            - CORE_LOGGING_PEER=debug
+            - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+            - CORE_PEER_LOCALMSPID=BuildingRepresentativesOrg
+            - CORE_PEER_MSPCONFIGPATH= /etc/hyperledger/msp/peer
+            - CORE_PEER_ADDRESS=peer1.buildingrepresentatives.evote.com:7051
+            - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=net_evote
+            - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb8:5984
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+        command: peer node start
+        ports: 
+            - 14051:7051
+            - 14053:7053
+        volumes: 
+            - /var/run/:/host/var/run/
+            - ./crypto-config/peerOrganizations/buildingrepresentatives.evote.com/peers/peer1.buildingrepresentatives.evote.com/msp:/etc/hyperledger/msp/peer
+            - ./crypto-config/peerOrganizations/buildingrepresentatives.evote.com/users:/etc/hyperledger/msp/users
+            - ./config:/etc/hyperledger/configtx
+        depends_on: 
+          - orderer1.evote.com
+          - orderer2.evote.com
+          - couchdb8
+        networks: 
+          - evote
+
+    couchdb8:
+        container_name: couchdb8
+        image: hyperledger/fabric-couchdb
+        environment:
+            - COUCHDB_USER=
+            - COUCHDB_PASSWORD=
+        ports:
+            - 12984:5984
+        networks:
+            - evote
+
+    peer0.managementoffice.evote.com: 
+        container_name: peer0.managementoffice.evote.com
+        image: hyperledger/fabric-peer:1.4.3
+        environment: 
+            - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+            - CORE_PEER_ID=peer0.managementoffice.evote.com
+            - CORE_LOGGING_PEER=debug
+            - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+            - CORE_PEER_LOCALMSPID=ManagementOfficeOrg
+            - CORE_PEER_MSPCONFIGPATH= /etc/hyperledger/msp/peer
+            - CORE_PEER_ADDRESS=peer0.managementoffice.evote.com:7051
+            - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.managementoffice.evote.com:7051
+            - CORE_PEER_GOSSIP_ENDPOINT=peer0.managementoffice.evote.com:7051
+            - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.managementoffice.evote.com:7051
+            - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=net_evote
+            - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb9:5984
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+        command: peer node start
+        ports: 
+            - 15051:7051
+            - 15053:7053
+        volumes: 
+            - /var/run/:/host/var/run/
+            - ./crypto-config/peerOrganizations/managementoffice.evote.com/peers/peer0.managementoffice.evote.com/msp:/etc/hyperledger/msp/peer
+            - ./crypto-config/peerOrganizations/managementoffice.evote.com/users:/etc/hyperledger/msp/users
+            - ./config:/etc/hyperledger/configtx
+        depends_on: 
+          - orderer1.evote.com
+          - orderer2.evote.com
+          - couchdb9
+        networks: 
+          - evote
+
+    couchdb9:
+        container_name: couchdb9
+        image: hyperledger/fabric-couchdb
+        environment:
+            - COUCHDB_USER=
+            - COUCHDB_PASSWORD=
+        ports:
+            - 13984:5984
+        networks:
+            - evote
+
+    peer1.managementoffice.evote.com: 
+        container_name: peer1.managementoffice.evote.com
+        image: hyperledger/fabric-peer:1.4.3
+        environment: 
+            - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+            - CORE_PEER_ID=peer1.managementoffice.evote.com
+            - CORE_LOGGING_PEER=debug
+            - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+            - CORE_PEER_LOCALMSPID=ManagementOfficeOrg
+            - CORE_PEER_MSPCONFIGPATH= /etc/hyperledger/msp/peer
+            - CORE_PEER_ADDRESS=peer1.managementoffice.evote.com:7051
+            - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=net_evote
+            - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb10:5984
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+            - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+        command: peer node start
+        ports: 
+            - 16051:7051
+            - 16053:7053
+        volumes: 
+            - /var/run/:/host/var/run/
+            - ./crypto-config/peerOrganizations/managementoffice.evote.com/peers/peer1.managementoffice.evote.com/msp:/etc/hyperledger/msp/peer
+            - ./crypto-config/peerOrganizations/managementoffice.evote.com/users:/etc/hyperledger/msp/users
+            - ./config:/etc/hyperledger/configtx
+        depends_on: 
+          - orderer1.evote.com
+          - orderer2.evote.com
+          - couchdb10
+        networks: 
+          - evote
+
+    couchdb10:
+        container_name: couchdb10
+        image: hyperledger/fabric-couchdb
+        environment:
+            - COUCHDB_USER=
+            - COUCHDB_PASSWORD=
+        ports:
+            - 14984:5984
+        networks:
+            - evote
+            
+    cli1:
+        container_name: cli1
+        image: hyperledger/fabric-tools
+        tty: true
+        environment: 
+          - CHANNEL_NAME=channelelectioncommittee
+          - GOPATH=/opt/gopath
+          - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+          - FABRIC_LOGGING_SPEC=INFO
+          - CORE_PEER_ID=cli
+          - CORE_PEER_ADDRESS=peer0.electioncommittee.evote.com:7051
+          - CORE_PEER_LOCALMSPID=ElectionCommitteeOrg
+          - CORE_PEER_MSPCONFIFPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/electioncommittee.evote.com/users/Admin@electioncommittee.evote.com/msp
+          - CORE_CHAINCODE_KEEPALIVE=10
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+        command: /bin/bash
+        volumes: 
+            - /var/run/:/host/var/run
+            - ./../chaincode/:/opt/gopath/src/chaincode
+            - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+            - ./config:/etc/hyperledger/configtx
+        networks:
+            - evote
+
+    cli2:
+        container_name: cli2
+        image: hyperledger/fabric-tools
+        tty: true
+        environment: 
+          - CHANNEL_NAME=channelexecutive
+          - GOPATH=/opt/gopath
+          - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+          - FABRIC_LOGGING_SPEC=INFO
+          - CORE_PEER_ID=cli
+          - CORE_PEER_ADDRESS=peer0.executive.evote.com:7051
+          - CORE_PEER_LOCALMSPID=ExecutiveOrg
+          - CORE_PEER_MSPCONFIFPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/electioncommittee.evote.com/users/Admin@electioncommittee.evote.com/msp
+          - CORE_CHAINCODE_KEEPALIVE=10
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+        command: /bin/bash
+        volumes: 
+            - /var/run/:/host/var/run
+            - ./../chaincode/:/opt/gopath/src/chaincode
+            - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+            - ./config:/etc/hyperledger/configtx
+        networks:
+            - evote
+
+    cli3:
+        container_name: cli3
+        image: hyperledger/fabric-tools
+        tty: true
+        environment: 
+        - CHANNEL_NAME=channelall
+          - GOPATH=/opt/gopath
+          - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+          - FABRIC_LOGGING_SPEC=INFO
+          - CORE_PEER_ID=cli
+          - CORE_PEER_ADDRESS=peer0.occupants.evote.com:7051
+          - CORE_PEER_LOCALMSPID=OccupantsOrg
+          - CORE_PEER_MSPCONFIFPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/electioncommittee.evote.com/users/Admin@electioncommittee.evote.com/msp
+          - CORE_CHAINCODE_KEEPALIVE=10
+        working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+        command: /bin/bash
+        volumes: 
+            - /var/run/:/host/var/run
+            - ./../chaincode/:/opt/gopath/src/chaincode
+            - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+            - ./config:/etc/hyperledger/configtx
+        networks:
+              - evote
