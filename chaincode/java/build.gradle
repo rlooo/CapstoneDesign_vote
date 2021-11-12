@@ -31,7 +31,15 @@ shadowJar {
         attributes 'Main-Class': 'org.hyperledger.fabric.chaincode.chaincode'
     }
 }
+//
+//test {
+//    useJUnitPlatform()
+//}
 
-test {
-    useJUnitPlatform()
+tasks.withType(Test) {
+    testLogging {
+        exceptionFormat "full"
+        events "started", "skipped", "passed", "failed"
+        showStandardStreams true
+    }
 }
